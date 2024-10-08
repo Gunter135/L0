@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.0.1  # Zookeeper image version
+    user: root
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"  # Zookeeper client port
+    volumes:
+      - ./zookeeper-data:/var/lib/zookeeper/data  # Persist Zookeeper data
+    networks:
+      - kafka-net  # Shared network with Kafka
+
+  kafka:
+    image: confluentinc/cp-kafka:7.0.1  # Kafka image version
+    user: root
+    container_name: kafka
+    depends_on:
+      - zookeeper  # Ensure Zookeeper is available before starting Kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181  # Connect Kafka to Zookeeper
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1  # Set replication factor for single broker
+      KAFKA_LOG_RETENTION_HOURS: 168  # Retain logs for 7 days
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"  # Automatically create topics if they don't exist
+      KAFKA_CREATE_TOPICS: "orders:4:4"
+    ports:
+      - "9092:9092"  # Kafka broker port
+    volumes:
+      - ./kafka-data:/var/lib/kafka/data  # Persist Kafka data
+    networks:
+      - kafka-net  # Shared network with Zookeeper
+
+networks:
+  kafka-net:
+    driver: bridge  # Shared network for Kafka and Zookeeper

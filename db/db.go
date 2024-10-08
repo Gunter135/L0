@@ -16,12 +16,12 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-type DBFactory struct {
+type DataBaseFactory struct {
 	pool *pgxpool.Pool
 }
 
 var (
-	instance *DBFactory
+	instance *DataBaseFactory
 	once     sync.Once
 )
 
@@ -66,7 +66,6 @@ func SaveOrder(conn *pgxpool.Pool, order *models.Order) error {
 }
 
 func GetDBConnection(dbconfig config.PostgreSQLConfig) (*pgxpool.Pool, error) {
-	//"postgres://username:password@localhost:5432/yourdbname"
 	var err error
 	once.Do(func() {
 		url := fmt.Sprintf("%s://%s:%s@%s:%s/%s", dbconfig.DatabaseType, dbconfig.User, dbconfig.Password, dbconfig.Host, dbconfig.Port, dbconfig.Database)
@@ -81,24 +80,18 @@ func GetDBConnection(dbconfig config.PostgreSQLConfig) (*pgxpool.Pool, error) {
 		pool, poolErr := pgxpool.ConnectConfig(context.Background(), config)
 		if poolErr != nil {
 			log.Fatalf("Unable to create connection pool: %v\n", poolErr)
-			err = poolErr
-			return
 		}
 
 		pingErr := pool.Ping(context.Background())
 		if pingErr != nil {
 			log.Fatalf("Unable to ping database: %v\n", pingErr)
-			err = pingErr
-			return
 		}
-
-		instance = &DBFactory{
+		instance = &DataBaseFactory{
 			pool: pool,
 		}
 
 		log.Println("Database connection pool established with MaxConns:", config.MaxConns)
 	})
-	// на случай если once do зафейлит, грубо говоря фейл сейф(если нет этого чека может вернуться неинициализированный пул -> ошибки или паника)
 	if instance == nil {
 		return nil, err
 	}
@@ -109,22 +102,18 @@ func GetDBConnection(dbconfig config.PostgreSQLConfig) (*pgxpool.Pool, error) {
 func InitDB(dbconfig config.PostgreSQLConfig) {
 	url := fmt.Sprintf("%s://%s:%s@%s:%s/%s", dbconfig.DatabaseType, dbconfig.User,
 		dbconfig.Password, dbconfig.Host, dbconfig.Port, dbconfig.Database)
-	// ctx := context.Background()
 	conn, err := pgx.Connect(context.Background(), url)
 	if err != nil {
-		// log.Fatalf("Unable to connect to database: %v\n", err)
-		utils.FatalError(err,"Unable to connect to database")
+		utils.FatalError(err, "Unable to connect to database")
 	}
 	defer conn.Close(context.Background())
 	data, err := os.ReadFile("./config/" + dbconfig.DbInit)
 	if err != nil {
-		// log.Fatalf("Unable to open dbinit file: %v\n", err)
-		utils.FatalError(err,"Unable to open dbinit file: ")
+		utils.FatalError(err, "Unable to open dbinit file: ")
 	}
 
 	if _, err := conn.Exec(context.Background(), string(data)); err != nil {
-		// log.Fatalf("Failed to execute dbinit script: %v\n", err)
-		utils.FatalError(err,"Failed to execute dbinit script")
+		utils.FatalError(err, "Failed to execute dbinit script")
 	}
 
 	log.Println("Database initialized successfully.")

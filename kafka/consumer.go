@@ -17,15 +17,13 @@ func ConsumeFromAllPartitions(topic string, bootstrapServer string, cache *map[s
 	var mu sync.Mutex
 	conn, err := kafka.DialLeader(context.Background(), "tcp", bootstrapServer, topic, 0)
 	if err != nil {
-		// log.Fatalf("Failed to dial Kafka broker for consumer: %v\n", err)
-		utils.FatalError(err,"Failed to dial Kafka broker for consumer")
+		utils.FatalError(err, "Failed to dial Kafka broker for consumer")
 	}
 	defer conn.Close()
 
 	partitions, err := conn.ReadPartitions(topic)
 	if err != nil {
-		// log.Fatalf("Failed to read partitions for topic %s: %v\n", topic, err)
-		utils.FatalError(err,"Failed to read partitions for topic %s")
+		utils.FatalError(err, "Failed to read partitions for topic %s")
 	}
 	for _, p := range partitions {
 		go consumer(topic, bootstrapServer, cache, pool, &mu, p.ID)
@@ -39,8 +37,11 @@ func consumer(topic string, bootstrapServer string, cache *map[string]models.Ord
 		Partition: partition,
 		MaxBytes:  10e6,
 	})
-	r.SetOffset(kafka.LastOffset)
-	log.Println("Reading...")
+	err := r.SetOffset(kafka.LastOffset)
+	if err != nil {
+		utils.FatalError(err, "Reader is closed")
+	}
+	log.Println("Consuming...")
 
 	for {
 		m, err := r.ReadMessage(context.Background())
@@ -51,7 +52,6 @@ func consumer(topic string, bootstrapServer string, cache *map[string]models.Ord
 		var order models.Order
 		err = json.Unmarshal(m.Value, &order)
 		if err != nil {
-			// log.Println("Failed to parse JSON: Invalid JSON Format")
 			utils.Warn("Failed to parse JSON: Invalid JSON Format")
 			continue
 		}
@@ -63,7 +63,6 @@ func consumer(topic string, bootstrapServer string, cache *map[string]models.Ord
 	}
 
 	if err := r.Close(); err != nil {
-		// log.Fatal("failed to close reader:", err)
-		utils.FatalError(err,"failed to close reader")
+		utils.FatalError(err, "failed to close reader")
 	}
 }

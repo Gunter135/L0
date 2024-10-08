@@ -12,7 +12,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func ProduceToAllPartitions(topic string, bootstrapServer string, wait_ms int) {
+func ProduceToAllPartitions(topic string, bootstrapServer string, waitMs int) {
 	var wg sync.WaitGroup
 	conn, err := kafka.DialLeader(context.Background(), "tcp", bootstrapServer, topic, 0)
 	if err != nil {
@@ -26,15 +26,15 @@ func ProduceToAllPartitions(topic string, bootstrapServer string, wait_ms int) {
 	}
 
 	for _, partition := range partitions {
-		for i := 0; i < 1; i++ {
+		for i := 0; i < 10; i++ {
 			wg.Add(1)
-			go producer(topic, bootstrapServer, partition.ID, wait_ms, &wg, 1)
+			go producer(topic, bootstrapServer, partition.ID, waitMs, &wg, 100)
 		}
 	}
 	wg.Wait()
 }
 
-func producer(topic string, bootstrapServer string, partition int, wait_ms int, wg *sync.WaitGroup, amount int) {
+func producer(topic string, bootstrapServer string, partition int, waitMs int, wg *sync.WaitGroup, amount int) {
 	defer wg.Done()
 	delivery := models.NewDelivery("Иванов Иван", "123456789", "12345", "Москва", "Улица", "МСК", "почта@почта.рус")
 	payment := models.NewPayment("txn123", "req456", "RUB", "Платежная система да", 1000, time.Now(), "Банк Ивановых", 50, 950, 0)
@@ -64,20 +64,7 @@ func producer(topic string, bootstrapServer string, partition int, wait_ms int, 
 		if err != nil {
 			utils.FatalError(err, "failed to write messages")
 		}
-		time.Sleep(time.Millisecond * time.Duration(wait_ms))
+		time.Sleep(time.Millisecond * time.Duration(waitMs))
 	}
 
-	// j, err := json.Marshal(item1)
-	// if err != nil {
-	// 	log.Fatal("Conversion failed")
-	// }
-	// msg := kafka.Message{
-	// 	Partition: partition,
-	// 	Value:     []byte(j),
-	// }
-	// fmt.Println("НЕВЕРОНОЕ ЗАВЕДОМО")
-	// err = writer.WriteMessages(context.Background(), msg)
-	// if err != nil {
-	// 	log.Fatal("failed to write messages:", err)
-	// }
 }

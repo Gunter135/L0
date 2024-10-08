@@ -10,11 +10,8 @@ import (
 	"net/http"
 )
 
-// Если успею:
-// Автотесты, мок на хттп хендлер,кафку,бд
-// Валидация json сообщения с кафки
 func main() {
-	utils.SetDefaultLogger()
+	utils.InitLogger()
 	log.Println("Starting up...")
 	log.Println("Reading config...")
 	config, err := config.ReadConfig("config/config.yaml")
@@ -30,7 +27,6 @@ func main() {
 	}
 	cache, err := db.RetrieveCache(pool)
 	if err != nil {
-		// utils.FatalError(err, "Кароч опять все сдохло")
 		utils.FatalError(err, "Couldn't retrieve cache from Database")
 	}
 	log.Printf("Cache contains %d orders", len(cache))
@@ -40,12 +36,6 @@ func main() {
 		config.KafkaConfig.BootstrapServer,
 		&cache,
 		pool,
-	)
-	// Продюсер, через него закидывал сообщения для проверки логики
-	go kafka.ProduceToAllPartitions(
-		config.KafkaConfig.Topic,
-		config.KafkaConfig.BootstrapServer,
-		200,
 	)
 
 	http.HandleFunc("/order", handlers.OrderHandler(&cache))
