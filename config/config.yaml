@@ -1,0 +1,13 @@
+kafka:
+  bootstrap-server: "localhost:9092"
+  topic: "orders"
+postgresql:
+  database-type: "postgres"
+  db: "wbdb"
+  host: "localhost"
+  port: "5432"
+  user: "root"
+  password: "secret"
+  max-connections: 32
+  min-connections: 1
+  dbinit: "dbinit.sql"
