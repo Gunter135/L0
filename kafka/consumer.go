@@ -55,7 +55,11 @@ func consumer(topic string, bootstrapServer string, cache *map[string]models.Ord
 			utils.Warn("Failed to parse JSON: Invalid JSON Format")
 			continue
 		}
-
+		err = models.ValidateOrder(order)
+		if err != nil {
+			utils.Error("JSON is not valid", err)
+			continue
+		}
 		mu.Lock()
 		(*cache)[order.OrderUID] = order
 		mu.Unlock()

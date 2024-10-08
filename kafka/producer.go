@@ -26,9 +26,9 @@ func ProduceToAllPartitions(topic string, bootstrapServer string, waitMs int) {
 	}
 
 	for _, partition := range partitions {
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 1; i++ {
 			wg.Add(1)
-			go producer(topic, bootstrapServer, partition.ID, waitMs, &wg, 100)
+			go producer(topic, bootstrapServer, partition.ID, waitMs, &wg, 10)
 		}
 	}
 	wg.Wait()
@@ -36,10 +36,10 @@ func ProduceToAllPartitions(topic string, bootstrapServer string, waitMs int) {
 
 func producer(topic string, bootstrapServer string, partition int, waitMs int, wg *sync.WaitGroup, amount int) {
 	defer wg.Done()
-	delivery := models.NewDelivery("Иванов Иван", "123456789", "12345", "Москва", "Улица", "МСК", "почта@почта.рус")
+	delivery := models.NewDelivery("Иванов Иван", "+9720000000", "12345", "Москва", "Улица", "МСК", "почта@почта.рус")
 	payment := models.NewPayment("txn123", "req456", "RUB", "Платежная система да", 1000, time.Now(), "Банк Ивановых", 50, 950, 0)
-	item1 := models.NewItem(12345, "track123", 100, "RID1", "Item1", 10, "M", 90, 98765, "Brand1", 1)
-	item2 := models.NewItem(67890, "track456", 200, "RID2", "Item2", 20, "L", 180, 54321, "Brand2", 2)
+	item1 := models.NewItem(12345, "track123", 100, "RID1", "Item1", 10, "M", 90, 98765, "Brand1", 200)
+	item2 := models.NewItem(67890, "track456", 200, "RID2", "Item2", 20, "L", 180, 54321, "Brand2", 200)
 	order := models.NewOrder("", "track789", "entry1", delivery, *payment, []models.Item{*item1, *item2}, "en_US", "signature", "cust123", "FedEx", "shard1", "SM1", "shard2", time.Now())
 
 	writer := kafka.NewWriter(kafka.WriterConfig{

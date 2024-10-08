@@ -37,8 +37,13 @@ func main() {
 		&cache,
 		pool,
 	)
+	go kafka.ProduceToAllPartitions(
+		config.KafkaConfig.Topic,
+		config.KafkaConfig.BootstrapServer,
+		200,
+	)
 
-	http.HandleFunc("/order", handlers.OrderHandler(&cache))
+	http.HandleFunc("/api/orders/{id}", handlers.OrderHandler(&cache))
 
 	utils.FatalError(http.ListenAndServe(":8080", nil), "Server ded(")
 }
