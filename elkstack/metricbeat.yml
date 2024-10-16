@@ -1,0 +1,23 @@
+metricbeat.modules:
+  - module: system
+    period: 10s          # Collect metrics every 10 seconds
+    metricsets:
+      - cpu
+      - memory
+      - network
+      - process
+      - diskio
+      - uptime
+    enabled: true
+  - module: kafka
+    metricsets:
+      - partition
+      - broker
+      - consumer
+      - producer
+    period: 10s
+    hosts: ["kafka:9092"]  # Adjust this to your Kafka host and port
+
+# Output configuration
+output.logstash:
+  hosts: ["logstash:5044"]  # Host and port of Logstash service in Docker Compose

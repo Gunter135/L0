@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: elasticsearch:8.5.1
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+      # - ELASTIC_PASSWORD=password
+    networks:
+      - backend-net
+    ports:
+      - "9200:9200"
+
+  logstash:
+    image: logstash:8.5.1
+    ports:
+      - "9600:9600"
+      - "5044:5044"  # Beats input
+    volumes:
+    - ./logstash.yml:/usr/share/logstash/config/logstash.yml
+    - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    networks:
+      - backend-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600/"]  # Health check for Logstash
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: kibana:8.5.1
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTIC_PASSWORD=password
+    networks:
+      - backend-net
+    ports:
+      - "5601:5601"
+
+
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:8.5.1
+    user: root
+    volumes:
+      - ./metricbeat.yml:/usr/share/metricbeat/metricbeat.yml  # Mount Metricbeat config
+      - /var/run/docker.sock:/var/run/docker.sock  # Needed to monitor Docker itself
+    environment:
+      - "ELASTICSEARCH_HOSTS=http://elasticsearch:9200"  # Send metrics to Elasticsearch
+      - "ELASTIC_PASSWORD=password"
+    networks:
+      - backend-net
+    depends_on:
+      - logstash
+      - elasticsearch
+
+
+# networks:
+#   backend-net:
+#     external: true
+
+networks:
+  backend-net:
+    external: true
