@@ -8,11 +8,12 @@ services:
       POSTGRES_PASSWORD: secret 
       POSTGRES_DB: wbdb 
     ports:
-      - "5432:5432"  # Map PostgreSQL port to the host machine
+      - "5432:5432"  # Map PostgreSQL port to the host machine; "5432" If we need to expose our service internally only
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - db_network
+      - backend-net
     restart: unless-stopped
 
 volumes:
@@ -21,4 +22,6 @@ volumes:
 
 networks:
   db_network:
-    driver: bridge
+    driver: bridge  # Default network driver
+  backend-net:
+    external: true
