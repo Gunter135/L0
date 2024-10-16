@@ -12,7 +12,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func ProduceToAllPartitions(topic string, bootstrapServer string, waitMs int) {
+func ProduceToAllPartitions(topic string, bootstrapServer string, waitMs int,msgAmount int) {
 	var wg sync.WaitGroup
 	conn, err := kafka.DialLeader(context.Background(), "tcp", bootstrapServer, topic, 0)
 	if err != nil {
@@ -28,7 +28,7 @@ func ProduceToAllPartitions(topic string, bootstrapServer string, waitMs int) {
 	for _, partition := range partitions {
 		for i := 0; i < 1; i++ {
 			wg.Add(1)
-			go producer(topic, bootstrapServer, partition.ID, waitMs, &wg, 10)
+			go producer(topic, bootstrapServer, partition.ID, waitMs, &wg, msgAmount)
 		}
 	}
 	wg.Wait()

@@ -14,7 +14,7 @@ func main() {
 	utils.InitLogger()
 	log.Println("Starting up...")
 	log.Println("Reading config...")
-	config, err := config.ReadConfig("config/config.yaml")
+	config, err := config.ReadConfig("./config/config.yaml")
 	if err != nil {
 		utils.FatalError(err, "Error, couldn't read config file")
 	}
@@ -37,13 +37,9 @@ func main() {
 		&cache,
 		pool,
 	)
-	go kafka.ProduceToAllPartitions(
-		config.KafkaConfig.Topic,
-		config.KafkaConfig.BootstrapServer,
-		200,
-	)
 
 	http.HandleFunc("/api/orders/{id}", handlers.OrderHandler(&cache))
+	http.HandleFunc("/api/orders/produce/{amount}", handlers.ProduceHandler(config.KafkaConfig))
 
 	utils.FatalError(http.ListenAndServe(":8080", nil), "Server ded(")
 }

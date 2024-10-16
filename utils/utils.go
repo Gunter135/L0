@@ -24,12 +24,20 @@ func RandStringBytes(n int) string {
 	return string(b)
 }
 
-func GetOrderIDFromURL(path string) (string, error) {
+func GetOrdersParamFromURL(path string) (string, error) {
 	parts := strings.Split(path, "/")
 	if len(parts) < 4 || parts[3] == "" {
 		return "", fmt.Errorf("invalid or missing order ID")
 	}
 	return parts[3], nil
+}
+
+func GetOrdersProduceParamFromURL(path string) (string, error) {
+	parts := strings.Split(path, "/")
+	if len(parts) < 5 || parts[4] == "" {
+		return "", fmt.Errorf("invalid message amount")
+	}
+	return parts[4], nil
 }
 
 func FatalError(err error, msg string, keysAndValues ...interface{}) {

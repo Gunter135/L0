@@ -1,10 +1,10 @@
 kafka:
-  bootstrap-server: "localhost:9092"
+  bootstrap-server: "kafka:9092"
   topic: "orders"
 postgresql:
   database-type: "postgres"
   db: "wbdb"
-  host: "localhost"
+  host: "postgres"
   port: "5432"
   user: "root"
   password: "secret"
